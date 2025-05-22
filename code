@@ -1,0 +1,669 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <string>
+#include <sstream>
+#include <chrono>
+using namespace std;
+
+struct Node {
+    int data;
+    Node* prev;
+    Node* next;
+};
+
+Node* head = nullptr;
+Node* tail = nullptr;
+int list_size = 0;
+
+Node* createItem(int value) {
+    Node* newNode = new Node;
+    newNode->data = value;
+    newNode->prev = nullptr;
+    newNode->next = nullptr;
+    return newNode;
+}
+
+unsigned lengthNode(Node* head) {
+    unsigned len = 0;
+    Node* current = head;
+    while (current != nullptr) {
+        len++;
+        current = current->next;
+    }
+    return len;
+}
+
+void appendItem(Node** head, Node** tail, int value) {
+    Node* newNode = createItem(value);
+    if (*head == nullptr) {
+        *head = *tail = newNode;
+    }
+    else {
+        (*tail)->next = newNode;
+        newNode->prev = *tail;
+        *tail = newNode;
+    }
+    list_size++;
+}
+
+void printList(Node* head) {
+    Node* cur = head;
+    while (cur != nullptr) {
+        cout << cur->data << " ";
+        cur = cur->next;
+    }
+    cout << endl;
+}
+
+int countEl(Node* head) {
+    return lengthNode(head);
+}
+
+void inputNode(Node** head, Node** tail) {
+    cout << "Введите числа через пробел: ";
+    string input;
+    cin.ignore();
+    getline(cin, input);
+    istringstream iss(input);
+    int num;
+    while (iss >> num) {
+        appendItem(head, tail, num);
+    }
+}
+
+Node* gettingAnItemByIndex(Node* head, int index) {
+    if (index >= lengthNode(head) || index < 0) {
+        cout << "Индекс больше количества элементов списка или отрицательный" << endl;
+        return nullptr;
+    }
+    if (head == nullptr) {
+        cout << "Список пуст" << endl;
+        return nullptr;
+    }
+    Node* cur = head;
+    int count = 0;
+    while (cur != nullptr) {
+        if (count == index) {
+            return cur;
+        }
+        cur = cur->next;
+        count++;
+    }
+    return nullptr;
+}
+
+Node* gettingAnItemByValue(Node* head, int value) {
+    if (head == nullptr) {
+        cout << "Список пуст" << endl;
+        return nullptr;
+    }
+    Node* cur = head;
+    while (cur != nullptr) {
+        if (cur->data == value) {
+            return cur;
+        }
+        cur = cur->next;
+    }
+    return nullptr;
+}
+
+void deleteAt(int index) {
+    if (index < 0 || index >= list_size) {
+        cout << "Неверный индекс\n";
+        return;
+    }
+
+    Node* toDelete;
+    if (index == 0) {
+        toDelete = head;
+        head = head->next;
+        if (head) head->prev = nullptr;
+        else tail = nullptr;
+    }
+    else if (index == list_size - 1) {
+        toDelete = tail;
+        tail = tail->prev;
+        tail->next = nullptr;
+    }
+    else {
+        Node* current = head;
+        for (int i = 0; i < index; i++) {
+            current = current->next;
+        }
+        toDelete = current;
+        current->prev->next = current->next;
+        current->next->prev = current->prev;
+    }
+    delete toDelete;
+    list_size--;
+}
+
+void deleteValue(int value) {
+    Node* current = head;
+    while (current != nullptr) {
+        if (current->data == value) {
+            Node* toDelete = current;
+            if (current == head) {
+                head = head->next;
+                if (head) head->prev = nullptr;
+                else tail = nullptr;
+            }
+            else if (current == tail) {
+                tail = tail->prev;
+                tail->next = nullptr;
+            }
+            else {
+                current->prev->next = current->next;
+                current->next->prev = current->prev;
+            }
+            current = current->next;
+            delete toDelete;
+            list_size--;
+        }
+        else {
+            current = current->next;
+        }
+    }
+}
+void insertEnd(int value) {
+    Node* newNode = createItem(value);
+    if (tail == nullptr) {
+        head = tail = newNode;
+    }
+    else {
+        tail->next = newNode;
+        newNode->prev = tail;
+        tail = newNode;
+    }
+    list_size++;
+}
+
+void insertBegin(int value) {
+    Node* newNode = createItem(value);
+    if (head == nullptr) {
+        head = tail = newNode;
+    }
+    else {
+        newNode->next = head;
+        head->prev = newNode;
+        head = newNode;
+    }
+    list_size++;
+}
+void insertAt(int value, int index) {
+    if (index < 0 || index > list_size) {
+        cout << "Неверный индекс\n";
+        return;
+    }
+
+    if (index == 0) {
+        insertBegin(value);
+    }
+    else if (index == list_size) {
+        insertEnd(value);
+    }
+    else {
+        Node* newNode = createItem(value);
+        Node* current = head;
+        for (int i = 0; i < index-1; i++) {
+            current = current->next;
+        }
+        newNode->next = current->next;
+        newNode->prev = current;
+        current->next->prev = newNode;
+        current->next = newNode;
+
+    }
+}
+Node* createList(int size) {
+    Node* head = nullptr;
+    Node* tail = nullptr;
+
+    for (int i = 0; i < size; i++) {
+        Node* newNode = new Node{ rand() % 100, nullptr, nullptr };
+
+        if (!head) {
+            head = tail = newNode;
+        }
+        else {
+            tail->next = newNode;
+            newNode->prev = tail;
+            tail = newNode;
+        }
+    }
+
+    return head;
+}
+void swapAt(int index1, int index2) {
+    if (index1 < 0 || index1 >= list_size || index2 < 0 || index2 >= list_size) {
+        cout << "Неверные индексы\n";
+        return;
+    }
+    if (index1 == index2) return;
+    Node* node1 = head;
+    for (int i = 0; i < index1; i++) {
+        node1 = node1->next;
+    }
+    Node* node2 = head;
+    for (int i = 0; i < index2; i++) {
+        node2 = node2->next;
+    }
+    int temp = node1->data;
+    node1->data = node2->data;
+    node2->data = temp;
+}
+void clearList() {
+    Node* current = head;
+    while (current != nullptr) {
+        Node* temp = current;
+        current = current->next;
+        delete temp;
+    }
+    head = tail = nullptr;
+    list_size = 0;
+}
+int* createArray(int size) {
+    int* arr = new int[size];
+    for (int i = 0; i < size; i++) {
+        arr[i] = rand() % 100;
+    }
+    return arr;
+}
+
+void printArray(int* arr, int size) {
+    for (int i = 0; i < size; i++) {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+}
+
+int* insertElement(int* arr, int& size, int index, int value) {
+    int* newArr = new int[size + 1];
+    for (int i = 0; i < index; i++) newArr[i] = arr[i];
+    newArr[index] = value;
+    for (int i = index; i < size; i++) newArr[i + 1] = arr[i];
+    delete[] arr;
+    size++;
+    return newArr;
+}
+
+int* removeElement(int* arr, int& size, int index) {
+    if (index < 0 || index >= size) return arr;
+
+    int* newArr = new int[size - 1];
+    for (int i = 0; i < index; i++) newArr[i] = arr[i];
+    for (int i = index + 1; i < size; i++) newArr[i - 1] = arr[i];
+    delete[] arr;
+    size--;
+    return newArr;
+}
+
+int getElement(int* arr, int size, int index) {
+    if (index < 0 || index >= size) return -1;
+    return arr[index];
+}
+void removeEvenFromArray(int*& arr, int& size) {
+    int newSize = 0;
+
+    for (int i = 0; i < size; i++) {
+        if (arr[i] % 2 != 0) {
+            newSize++;
+        }
+    }
+
+    int* newArr = new int[newSize];
+    int index = 0;
+
+    for (int i = 0; i < size; i++) {
+        if (arr[i] % 2 != 0) {
+            newArr[index++] = arr[i];
+        }
+    }
+    delete[] arr;
+    arr = newArr;
+    size = newSize;
+}
+
+void removeEvenFromList(Node*& head) {
+    Node* current = head;
+
+    while (current) {
+        if (current->data % 2 == 0) {
+
+            if (current->prev) {
+                current->prev->next = current->next;
+            }
+            else {
+                head = current->next;
+            }
+
+            if (current->next) {
+                current->next->prev = current->prev;
+            }
+
+            Node* toDelete = current;
+            current = current->next;
+            delete toDelete;
+        }
+        else {
+            current = current->next;
+        }
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    srand(time(0));
+
+    while (true) {
+        cout << "1. Формирование списка с случайными числами от 0 до 99 или числами, которые введёт пользователь" << endl
+            << "2. Определение скорости создания двусвязного списка" << endl
+            << "3. Вставка, удаление, обмен и получение элемента двусвязного списка" << endl
+            << "4. Вставка, удаление, получение элемента динамического массива"<<endl
+            << "5. IDZ "<<endl
+            << "6. Выход" << endl;
+
+        int number, change;
+        cout << "Введите номер задания: ";
+        cin >> number;
+        system("cls");
+
+        switch (number) {
+        case 1: {
+            cout << "1. Формирование списка с случайными числами от 0 до 99" << endl
+                << "2. Формирование списка числами, которые введёт пользователь" << endl;
+            cout << "Введите номер задания: ";
+            cin >> change;
+
+            switch (change) {
+            case 1: {
+                int N;
+                cout << "Введите количество элементов в списке: ";
+                cin >> N;
+                for (int i = 0; i < N; i++) {
+                    int randomValue = rand() % 100;
+                    appendItem(&head, &tail, randomValue);
+                }
+                printList(head);
+                break;
+            }
+            case 2: {
+                inputNode(&head, &tail);
+                int M = countEl(head);
+                cout << "Количество элементов: " << M << endl;
+                printList(head);
+                break;
+            }
+            default: {
+                system("cls");
+                cout << "Неверный ввод! Пожалуйста, выберите 1 или 2.\n\n";
+                break;
+            }
+            }
+            break;
+        }
+        case 2: {
+            clearList();
+            auto start_time = chrono::steady_clock::now();
+            inputNode(&head, &tail);
+            auto end_time = chrono::steady_clock::now();
+            auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+            cout << "Время создания списка: " << elapsed_ns.count() << " ns" << endl;
+            break;
+        }
+        case 3: {
+            int choice;
+            bool exit = false;
+
+            while (!exit) {
+                cout << "\nМеню операций с двусвязным списком:\n";
+                cout << "1. Добавить элемент\n";
+                cout << "2. Удалить элемент по индексу\n";
+                cout << "3. Удалить элемент по значению\n";
+                cout << "4. Получить элемент по индексу\n";
+                cout << "5. Найти элемент по значению\n";
+                cout << "6. Обмен элементов\n";
+                cout << "7. Вставить элемент\n";
+                cout << "8. Выход\n";
+                cout << "Выберите операцию: ";
+                cin >> choice;
+
+                switch (choice) {
+                case 1: {
+                    inputNode(&head, &tail);
+                    break;
+                }
+                case 2: {
+                    int index;
+                    cout << "Введите индекс для удаления: ";
+                    cin >> index;
+                    auto start_time = chrono::steady_clock::now();
+                    deleteAt(index);
+                    auto end_time = chrono::steady_clock::now();
+                    auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+                    cout << "Время удаления элемента списка: " << elapsed_ns.count() << " ns" << endl;
+                    cout << "Список после удаления: ";
+                    printList(head);
+                    break;
+                }
+                case 3: {
+                    int value;
+                    cout << "Введите значение для удаления: ";
+                    cin >> value;
+                    auto start_time = chrono::steady_clock::now();
+                    deleteValue(value);
+                    auto end_time = chrono::steady_clock::now();
+                    auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+                    cout << "Время удаления элемента списка: " << elapsed_ns.count() << " ns" << endl;
+                    cout << "Список после удаления: ";
+                    printList(head);
+                    break;
+                }
+                case 4: {
+                    bool validIndex = false;
+                    do {
+                        int number;
+                        cout << "Введите индекс элемента: ";
+                        cin >> number;
+                        Node* elem = gettingAnItemByIndex(head, number);
+                        if (elem != nullptr) {
+                            cout << "Элемент с индексом " << number << ": " << elem->data << endl;
+                            validIndex = true;
+                        }
+                        else {
+                            cout << "Неверный индекс! Попробуйте снова." << endl;
+                        }
+                    } while (!validIndex);
+                    break;
+                }
+                case 5: {
+                    int searchValue;
+                    cout << "Введите значение для поиска: ";
+                    cin >> searchValue;
+                    auto start_time = chrono::steady_clock::now();
+                    Node* result = gettingAnItemByValue(head, searchValue);
+                    auto end_time = chrono::steady_clock::now();
+                    auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+                    cout << "Время получения элемента списка: " << elapsed_ns.count() << " ns" << endl;
+                    if (result != nullptr) {
+                        cout << "Значение " << searchValue << " найдено в списке" << endl;
+                    }
+                    else {
+                        cout << "Значение " << searchValue << " не найдено в списке" << endl;
+                    }
+                    break;
+                }
+                case 6: {
+                    int value,value1;
+                    cout << "Введите index для обмена: ";
+                    cin >> value;
+                    cout << "Введите index для обмена: ";
+                    cin >> value1;
+                    swapAt(value,value1);
+                    cout << "Список после обмена: ";
+                    printList(head);
+                    break;
+                }
+                case 7: {
+                    int value,index;
+                    cout << "Введите value для вставки: ";
+                    cin >> value;
+                    cout << "Введите index для вставки: ";
+                    cin >> index;
+                    auto start_time = chrono::steady_clock::now();
+                    insertAt(value,index);
+                    auto end_time = chrono::steady_clock::now();
+                    auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+                    cout << "Время создания списка: " << elapsed_ns.count() << " ns" << endl;
+                    cout << "Список после вставки: ";
+                    printList(head);
+                    break;
+                }
+                default: {
+                    cout << "Неверный выбор! Попробуйте снова.\n";
+                    break;
+                }
+                }
+            }
+            break;
+        }
+        case 4: {
+            int* arr = nullptr;
+            int size = 0;
+            int choice;
+
+            do {
+                cout << "\nМеню операций с динамическим массивом:\n";
+                cout << "1. Создать массив\n";
+                cout << "2. Вывести массив\n";
+                cout << "3. Вставить элемент\n";
+                cout << "4. Удалить элемент\n";
+                cout << "5. Получить элемент\n";
+                cout << "0. Выход\n";
+                cout << "Выберите действие: ";
+                cin >> choice;
+
+                switch (choice) {
+                case 1: {
+                    if (arr) delete[] arr;
+                    cout << "Введите размер массива: ";
+                    cin >> size;
+                    auto start_time = chrono::steady_clock::now();
+                    arr = createArray(size);
+                    auto end_time = chrono::steady_clock::now();
+                    auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+                    cout << "Время удаления элемента списка: " << elapsed_ns.count() << " ns" << endl;
+                    cout << "Массив создан.\n";
+                    break;
+                }
+                case 2: {
+                    if (!arr) {
+                        cout << "Массив не создан!\n";
+                        break;
+                    }
+                    cout << "Текущий массив (" << size << " элементов): ";
+                    printArray(arr, size);
+                    break;
+                }
+                case 3: {
+                    if (!arr) {
+                        cout << "Массив не создан!\n";
+                        break;
+                    }
+                    int index, value;
+                    cout << "Введите индекс для вставки (0-" << size << "): ";
+                    cin >> index;
+                    cout << "Введите значение: ";
+                    cin >> value;
+                    auto start_time = chrono::steady_clock::now();
+                    arr = insertElement(arr, size, index, value);
+                    auto end_time = chrono::steady_clock::now();
+                    auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+                    cout << "Время удаления элемента списка: " << elapsed_ns.count() << " ns" << endl;
+                    cout << "Элемент вставлен.\n";
+                    break;
+                }
+                case 4: {
+                    if (!arr) {
+                        cout << "Массив не создан!\n";
+                        break;
+                    }
+                    int index;
+                    cout << "Введите индекс для удаления (0-" << size - 1 << "): ";
+                    cin >> index;
+                    auto start_time = chrono::steady_clock::now();
+                    arr = removeElement(arr, size, index);
+                    auto end_time = chrono::steady_clock::now();
+                    auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+                    cout << "Время удаления элемента списка: " << elapsed_ns.count() << " ns" << endl;
+                    cout << "Элемент удален.\n";
+                    break;
+                }
+                case 5: {
+                    if (!arr) {
+                        cout << "Массив не создан!\n";
+                        break;
+                    }
+                    int index;
+                    cout << "Введите индекс элемента (0-" << size - 1 << "): ";
+                    cin >> index;
+                    auto start_time = chrono::steady_clock::now();
+                    int value = getElement(arr, size, index);
+                    auto end_time = chrono::steady_clock::now();
+                    auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+                    cout << "Время удаления элемента списка: " << elapsed_ns.count() << " ns" << endl;
+                    if (value != -1) {
+                        cout << "Элемент с индексом " << index << ": " << value << endl;
+                    }
+                    else {
+                        cout << "Неверный индекс!\n";
+                    }
+                    break;
+                }
+                case 0: {
+                    if (arr) delete[] arr;
+                    cout << "Выход из программы.\n";
+                    break;
+                }
+                default: {
+                    cout << "Неверный выбор! Попробуйте снова.\n";
+                    break;
+                }
+                }
+            } while (choice != 0);
+        }break;
+        case 5: {
+            int* arr = nullptr;
+            int size,size1;
+            cout << "Введите размер массива: ";
+            cin >> size;
+            arr = createArray(size);
+            auto start_time = chrono::steady_clock::now();
+            removeEvenFromArray(arr, size);
+            auto end_time = chrono::steady_clock::now();
+            auto elapsed_ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+            cout << "Время удаления четных элеменов массива: " << elapsed_ns.count() << " ns" << endl;
+
+            cout << "Введите размер двухсвязного списка: ";
+            cin >> size1;
+            Node* list = createList(size1);
+            auto start_time1 = chrono::steady_clock::now();
+            removeEvenFromList(list);
+            auto end_time1 = chrono::steady_clock::now();
+            auto elapsed_ns1 = chrono::duration_cast<chrono::nanoseconds>(end_time1 - start_time1);
+            cout << "Время удаления четных двухсвязного списка: " << elapsed_ns1.count() << " ns" << endl;
+        }break;
+        case 6: {
+            clearList();
+            return 0;
+        }break;
+
+        default: {
+            cout << "Неверный номер задания! Пожалуйста, выберите от 1 до 6.\n";
+            break;
+        }
+        }
+    }
+    return 0;
+}
